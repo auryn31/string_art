@@ -1,0 +1,12 @@
+{
+  "name": "string_art",
+  "version": "1.0.0",
+  "description": "A web page for image manipulation.",
+  "main": "script.js",
+  "scripts": {
+    "start": "live-server"
+  },
+  "devDependencies": {
+    "live-server": "^1.2.2"
+  }
+}

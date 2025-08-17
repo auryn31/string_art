@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image to String Art</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Image to String Art</h1>
+    <div class="main-container">
+        <div class="controls-container">
+            <div class="control-group">
+                <label for="imageLoader">1. Upload Image:</label>
+                <input type="file" id="imageLoader" name="imageLoader"/>
+            </div>
+            <div class="control-group">
+                <label for="contrast">2. Adjust Contrast: <span id="contrastValue">0</span></label>
+                <input type="range" id="contrast" min="-100" max="100" value="0">
+            </div>
+            <div class="control-group">
+                <label for="pins">3. Set Pins: <span id="pinsValue">200</span></label>
+                <input type="range" id="pins" min="50" max="500" value="200">
+            </div>
+            <div class="control-group">
+                <label for="lines">4. Set Lines: <span id="linesValue">1000</span></label>
+                <input type="range" id="lines" min="500" max="5000" value="1000">
+            </div>
+            <div class="control-group">
+                <label for="lineWidth">5. Line Width: <span id="lineWidthValue">3</span></label>
+                <input type="range" id="lineWidth" min="1" max="10" value="3">
+            </div>
+            <div class="control-group">
+                <label for="lineWeight">6. Line Weight: <span id="lineWeightValue">15</span></label>
+                <input type="range" id="lineWeight" min="5" max="50" value="15">
+            </div>
+            <div class="control-group action-buttons">
+                <button id="calculateButton">Start Calculation</button>
+                <button id="resetButton">Reset</button>
+            </div>
+            <div class="control-group">
+                <label for="toggleImage">Toggle Background Image</label>
+                <input type="checkbox" id="toggleImage" checked>
+            </div>
+        </div>
+        <div id="canvasContainer">
+            <canvas id="imageCanvas" width="1000" height="1000"></canvas>
+            <canvas id="stringArtCanvas" width="1000" height="1000"></canvas>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
