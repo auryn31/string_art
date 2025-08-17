@@ -1,4 +1,3 @@
-
 // --- Canvas & Contexts ---
 const imageCanvas = document.getElementById('imageCanvas');
 const imageCtx = imageCanvas.getContext('2d');
@@ -17,7 +16,7 @@ const calculateButton = document.getElementById('calculateButton');
 const resetButton = document.getElementById('resetButton');
 const downloadButton = document.getElementById('downloadButton');
 const toggleImage = document.getElementById('toggleImage');
-const toggleInverted = document.getElementById('toggleInverted'); // NEW
+const toggleInverted = document.getElementById('toggleInverted');
 
 // --- UI Value Displays ---
 const pinsValue = document.getElementById('pinsValue');
@@ -38,8 +37,8 @@ const nextButton = document.getElementById('nextButton');
 const lineInfo = document.getElementById('lineInfo');
 
 // --- State Variables ---
-let baseImageData = null; // Raw grayscale data
-let workingImageData = null; // Inverted and contrasted data for the algorithm
+let baseImageData = null;
+let workingImageData = null;
 let lineHistory = [];
 let pins = [];
 let renderingIntervalId = null;
@@ -58,7 +57,7 @@ calculateButton.addEventListener('click', () => {
 resetButton.addEventListener('click', resetCalculation);
 downloadButton.addEventListener('click', downloadImage);
 toggleImage.addEventListener('change', () => imageCanvas.style.display = toggleImage.checked ? 'block' : 'none');
-toggleInverted.addEventListener('change', updateImageDisplay); // NEW
+toggleInverted.addEventListener('change', updateImageDisplay);
 
 [pinsSlider, linesSlider, lineWidthSlider, lineWeightSlider, distanceBiasSlider].forEach(slider => {
     slider.oninput = () => {
@@ -136,10 +135,8 @@ function updateImageDisplay() {
     let displayData;
 
     if (showInverted) {
-        // If showing inverted, use the already processed workingImageData
         displayData = workingImageData;
     } else {
-        // If showing non-inverted, re-process baseImageData without inversion
         const nonInvertedProcessedData = new Uint8ClampedArray(baseImageData.data);
         for (let i = 0; i < nonInvertedProcessedData.length; i += 4) {
             const oldValue = nonInvertedProcessedData[i];
@@ -203,11 +200,21 @@ function calculateStringArt() {
         let bestNextPinIndex = -1, maxScore = -1;
         for (let i = 0; i < numPins; i++) {
             if (i === currentPinIndex || i === previousPinIndex) continue;
-            const linePixels = getLinePixels(pins[currentPinIndex], pins[i]);
+            const sampledPixels = getSampledPixels(pins[currentPinIndex], pins[i]);
             let currentDarkness = 0;
-            for (const pixel of linePixels) {
-                currentDarkness += calculationData.data[(pixel.y * 1000 + pixel.x) * 4];
+            let totalWeight = 0;
+
+            for (const sample of sampledPixels) {
+                const pixelIndex = (sample.y * 1000 + sample.x) * 4;
+                currentDarkness += calculationData.data[pixelIndex] * sample.weight;
+                totalWeight += sample.weight;
             }
+
+            // Normalize darkness by total weight
+            if (totalWeight > 0) {
+                currentDarkness /= totalWeight;
+            }
+
             const distance = Math.hypot(pins[i].x - pins[currentPinIndex].x, pins[i].y - pins[currentPinIndex].y);
             const currentScore = currentDarkness * Math.pow(distance, distanceBias);
             if (currentScore > maxScore) {
@@ -295,19 +302,36 @@ function downloadImage() {
     document.body.removeChild(a);
 }
 
-function getLinePixels(p1, p2) {
+// Modified to return sampled pixels with weights
+function getSampledPixels(p1, p2) {
     const pixels = [];
-    let x1 = Math.round(p1.x), y1 = Math.round(p1.y);
-    const x2 = Math.round(p2.x), y2 = Math.round(p2.y);
-    const dx = Math.abs(x2 - x1), dy = Math.abs(y2 - y1);
-    const sx = (x1 < x2) ? 1 : -1, sy = (y1 < y2) ? 1 : -1;
-    let err = dx - dy;
-    while (true) {
-        if (x1 >= 0 && x1 < 1000 && y1 >= 0 && y1 < 1000) pixels.push({ x: x1, y: y1 });
-        if ((x1 === x2) && (y1 === y2)) break;
-        const e2 = 2 * err;
-        if (e2 > -dy) { err -= dy; x1 += sx; }
-        if (e2 < dx) { err += dx; y1 += sy; }
+    const x1 = p1.x, y1 = p1.y;
+    const x2 = p2.x, y2 = p2.y;
+
+    const dx = Math.abs(x2 - x1);
+    const dy = Math.abs(y2 - y1);
+    const distance = Math.hypot(dx, dy);
+
+    // Number of samples proportional to line length
+    const numSamples = Math.max(1, Math.round(distance));
+
+    for (let i = 0; i <= numSamples; i++) {
+        const t = numSamples === 0 ? 0.5 : i / numSamples; // Avoid division by zero
+        const sampleX = x1 + t * (x2 - x1);
+        const sampleY = y1 + t * (y2 - y1);
+
+        const pixelX = Math.floor(sampleX);
+        const pixelY = Math.floor(sampleY);
+
+        // Calculate distance from sample point to pixel center for weighting
+        const distToCenter = Math.hypot(sampleX - (pixelX + 0.5), sampleY - (pixelY + 0.5));
+        // Simple linear falloff for weight (max_dist_in_pixel is sqrt(0.5^2 + 0.5^2) = 0.707)
+        const maxDistInPixel = Math.SQRT2 / 2; // ~0.707
+        const weight = Math.max(0, 1 - (distToCenter / maxDistInPixel));
+
+        if (pixelX >= 0 && pixelX < 1000 && pixelY >= 0 && pixelY < 1000) {
+            pixels.push({ x: pixelX, y: pixelY, weight: weight });
+        }
     }
     return pixels;
 }
