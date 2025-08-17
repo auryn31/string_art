@@ -1,86 +1,246 @@
+/* --- CSS Variables for Theming --- */
+:root {
+  --bg-color: #121212;
+  --surface-color: #1e1e1e;
+  --primary-color: #007aff;
+  --primary-hover-color: #0056b3;
+  --danger-color: #f44336;
+  --danger-hover-color: #d32f2f;
+  --text-primary: #ffffff;
+  --text-secondary: #b0b0b0;
+  --border-color: #333333;
+}
+
+/* --- General Styles --- */
 body {
-    font-family: sans-serif;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    margin: 0;
-    background-color: #f0f0f0;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
+    sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start; /* Align to top */
+  min-height: 100vh;
+  margin: 0;
+  padding: 2rem;
+  background-color: var(--bg-color);
+  color: var(--text-secondary);
 }
 
 h1 {
-    margin-bottom: 1rem;
+  margin-bottom: 2rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-align: center;
 }
 
+/* --- Layout --- */
 .main-container {
-    display: flex;
-    flex-direction: row;
-    align-items: flex-start;
-    gap: 2rem;
-}
-
-#canvasContainer {
-    position: relative;
-    width: 1000px;
-    height: 1000px;
-}
-
-canvas {
-    position: absolute;
-    top: 0;
-    left: 0;
-    border-radius: 50%;
-}
-
-#imageCanvas {
-    background-color: #fff;
-    z-index: 1;
-    border: 1px solid #ccc;
-}
-
-#stringArtCanvas {
-    z-index: 2;
-    border: 1px solid #888;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 2rem;
+  width: 100%;
+  max-width: 1400px;
 }
 
 .controls-container {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-    padding: 1rem;
-    background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 2rem;
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  flex-basis: 380px;
+  flex-shrink: 0;
 }
 
+#canvasContainer {
+  position: relative;
+  flex-grow: 1;
+  max-width: 1000px;
+  aspect-ratio: 1 / 1;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+  border-radius: 50%;
+  background-color: #fff; /* Moved from #imageCanvas */
+}
+
+canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+}
+
+#imageCanvas {
+  /* background-color is now on the container */
+  z-index: 1;
+}
+
+#stringArtCanvas {
+  z-index: 2;
+}
+
+/* --- Controls --- */
 .control-group {
-    display: flex;
-    flex-direction: column;
+  display: flex;
+  flex-direction: row;
+  gap: 0.2rem;
+  align-content: center;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 1.5rem;
+}
+.control-group:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
 }
 
 .control-group label {
-    margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: var(--text-primary);
 }
 
 .action-buttons {
-    flex-direction: row;
-    gap: 1rem;
+  flex-direction: row;
+  gap: 1rem;
 }
 
-button {
-    padding: 0.5rem 1rem;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
+button,
+.button-style-label {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: all 0.2s ease-in-out;
+  text-align: center;
 }
 
-#calculateButton {
-    background-color: #4CAF50;
-    color: white;
+#calculateButton,
+.button-style-label[for="imageLoader"] {
+  background-color: var(--primary-color);
+  color: white;
+}
+#calculateButton:hover,
+.button-style-label[for="imageLoader"]:hover {
+  background-color: var(--primary-hover-color);
+  transform: translateY(-2px);
 }
 
 #resetButton {
-    background-color: #f44336;
-    color: white;
+  background-color: var(--danger-color);
+  color: white;
+}
+#resetButton:hover {
+  background-color: var(--danger-hover-color);
+  transform: translateY(-2px);
+}
+
+/* Custom File Input */
+input[type="file"] {
+  display: none;
+}
+
+/* Custom Range Slider */
+input[type="range"] {
+  -webkit-appearance: none;
+  width: 100%;
+  background: transparent;
+}
+input[type="range"]:focus {
+  outline: none;
+}
+input[type="range"]::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 4px;
+  cursor: pointer;
+  background: var(--border-color);
+  border-radius: 2px;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  height: 18px;
+  width: 18px;
+  border-radius: 50%;
+  background: var(--primary-color);
+  cursor: pointer;
+  margin-top: -7px; /* You need to specify a margin in Chrome, but in Firefox and IE it is automatic */
+  transition: background-color 0.2s ease;
+}
+input[type="range"]:hover::-webkit-slider-thumb {
+  background: var(--primary-hover-color);
+}
+
+/* --- Footer --- */
+footer {
+  margin-top: 3rem;
+  padding: 1rem;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+#playbackContainer {
+  margin-top: 2rem;
+  width: 100%;
+  max-width: 1000px;
+  flex-basis: auto;
+}
+
+.playback-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+#lineInfo {
+  font-family: monospace;
+  font-size: 1.1rem;
+  color: var(--text-primary);
+}
+
+progress {
+  width: 100%;
+}
+
+footer a {
+  color: var(--primary-color);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+footer a:hover {
+  color: var(--text-primary);
+  text-decoration: underline;
+}
+
+/* --- Mobile Responsiveness --- */
+@media (max-width: 900px) {
+  body {
+    padding: 1rem;
+  }
+  h1 {
+    font-size: 1.5rem;
+  }
+  .main-container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .controls-container {
+    flex-basis: auto;
+    width: 100%;
+    max-width: 500px;
+    padding: 1.5rem;
+  }
+
+  #canvasContainer {
+    width: 90vw;
+    max-width: 500px;
+  }
 }
