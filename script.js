@@ -15,7 +15,9 @@ const lineWeightSlider = document.getElementById('lineWeight');
 const distanceBiasSlider = document.getElementById('distanceBias');
 const calculateButton = document.getElementById('calculateButton');
 const resetButton = document.getElementById('resetButton');
+const downloadButton = document.getElementById('downloadButton');
 const toggleImage = document.getElementById('toggleImage');
+const toggleInverted = document.getElementById('toggleInverted'); // NEW
 
 // --- UI Value Displays ---
 const pinsValue = document.getElementById('pinsValue');
@@ -54,7 +56,9 @@ calculateButton.addEventListener('click', () => {
     else alert('Please upload an image first.');
 });
 resetButton.addEventListener('click', resetCalculation);
+downloadButton.addEventListener('click', downloadImage);
 toggleImage.addEventListener('change', () => imageCanvas.style.display = toggleImage.checked ? 'block' : 'none');
+toggleInverted.addEventListener('change', updateImageDisplay); // NEW
 
 [pinsSlider, linesSlider, lineWidthSlider, lineWeightSlider, distanceBiasSlider].forEach(slider => {
     slider.oninput = () => {
@@ -106,25 +110,47 @@ function handleImage(e) {
     reader.readAsDataURL(e.target.files[0]);
 }
 
-// NEW: Single, unified function for all image processing
+// Calculates workingImageData (inverted and contrasted for algorithm)
 function processImage() {
     const contrast = parseInt(contrastSlider.value);
-    const slope = Math.pow(1.03, contrast); // Softened the slope
+    const slope = Math.pow(1.03, contrast);
 
     const processedData = new Uint8ClampedArray(baseImageData.data);
     for (let i = 0; i < processedData.length; i += 4) {
-        // 1. Invert the image (dark becomes high value)
         const invertedValue = 255 - processedData[i];
-        // 2. Apply sigmoid contrast to the inverted image
         const contrastedValue = 255 / (1 + Math.exp(-slope * (invertedValue / 255 - 0.5)));
         processedData[i] = contrastedValue; 
         processedData[i+1] = contrastedValue;
         processedData[i+2] = contrastedValue;
     }
-    // This is the final data used by the algorithm
     workingImageData = new ImageData(processedData, baseImageData.width, baseImageData.height);
-    // Draw this exact data to the canvas so the user sees what the algorithm sees
-    imageCtx.putImageData(workingImageData, 0, 0);
+    updateImageDisplay(); // Call display function after processing
+}
+
+// Updates the image preview based on toggle state
+function updateImageDisplay() {
+    const showInverted = toggleInverted.checked;
+    const contrast = parseInt(contrastSlider.value);
+    const slope = Math.pow(1.03, contrast);
+
+    let displayData;
+
+    if (showInverted) {
+        // If showing inverted, use the already processed workingImageData
+        displayData = workingImageData;
+    } else {
+        // If showing non-inverted, re-process baseImageData without inversion
+        const nonInvertedProcessedData = new Uint8ClampedArray(baseImageData.data);
+        for (let i = 0; i < nonInvertedProcessedData.length; i += 4) {
+            const oldValue = nonInvertedProcessedData[i];
+            const contrastedValue = 255 / (1 + Math.exp(-slope * (oldValue / 255 - 0.5)));
+            nonInvertedProcessedData[i] = contrastedValue;
+            nonInvertedProcessedData[i+1] = contrastedValue;
+            nonInvertedProcessedData[i+2] = contrastedValue;
+        }
+        displayData = new ImageData(nonInvertedProcessedData, baseImageData.width, baseImageData.height);
+    }
+    imageCtx.putImageData(displayData, 0, 0);
 }
 
 function resetCalculation() {
@@ -245,6 +271,28 @@ function drawState(targetIteration) {
     } else {
         lineInfo.textContent = '-';
     }
+}
+
+function downloadImage() {
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = stringArtCanvas.width;
+    tempCanvas.height = stringArtCanvas.height;
+    const tempCtx = tempCanvas.getContext('2d');
+
+    // Fill with white background
+    tempCtx.fillStyle = 'white';
+    tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+
+    // Draw the string art on top
+    tempCtx.drawImage(stringArtCanvas, 0, 0);
+
+    const dataURL = tempCanvas.toDataURL('image/png');
+    const a = document.createElement('a');
+    a.href = dataURL;
+    a.download = 'string_art.png';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
 }
 
 function getLinePixels(p1, p2) {
